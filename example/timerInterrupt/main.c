@@ -21,7 +21,10 @@ static int counter = 0;
 static int counter2 = 0;
 
 void main () {
-  printf("TIMER DEMO:\rInstall IRQ routine that counts 10 seconds using Timer1 IRQ\n");
+  char buf[80];
+  setvbuf(stdout, buf, _IOLBF, 80);
+
+  printf("TIMER DEMO:\nInstall IRQ routine that counts 10 seconds using Timer1 IRQ\n");
   initInterrupt();
   running = true;
   int old = counter2;
@@ -33,7 +36,8 @@ void main () {
     if (old != counter2) {
       old = counter2;
       __enable_interrupts();
-      printf("%d",old);        // old does not need protection and has same value
+      printf(" %d ",old);        // old does not need protection and has same value
+      fflush(stdout);
     } else {
       __enable_interrupts();
     }
@@ -42,6 +46,7 @@ void main () {
   __disable_interrupts();      // protect restoring original vector
   VectorIRQ = origIRQVector;
   __enable_interrupts();
+  fputc('\n', stdout);
 }
 
 __attribute__((interrupt))
@@ -77,22 +82,19 @@ static void initInterrupt(void) {
 // ---------------------------
 // Install Timer1 Interrupt
 // ---------------------------
-  __disable_interrupts();                       // disable interrupts while modifying interrupt
+  __disable_interrupts();               // disable interrupts while modifying interrupt
   origIRQVector = VectorIRQ ;           // Copy the original Interrupt Vector
   VectorIRQ = interruptHandler;         // install the new routine
-  InterruptMask.reg0 |= InterruptTimer1;
+  InterruptMask.reg0 &= ~InterruptTimer1;
 
-  printf("* Modified IRQ Mask to allow processing Timer1 IRQ\r");
+  printf("* Modified IRQ Mask to allow processing Timer1 IRQ\n");
   // ------------------
   // Inititalize timer1
   // ------------------
-  // C pseudo code for counting down (thx to Steph Allaire) - https://wiki.c256foenix.com/index.php?title=GABE#GABE_--_The_System_Control.2C_I.2FO.2C_and_Sound_Chip
-  //      clockValue=0x03A42C - Define clock Value for a 1/60th of a second timer  (Homework -> do the math based on previous data)
   SetTimeValue(Timer[1].value, MicrosToClockValue(1000000 / 60));
   SetTimeValue(Timer[1].compare_value, MillisToClockValue(0));
   Timer[1].reload = true;
-  Timer[1].enable = true;
-  Timer[1].load = true;
-  printf("* Configured Timer1 to generate an IRQ every 1/60th of a second\r");
-  __enable_interrupts();                  // Reenable interrupts
+  Timer[1].control = TimerEnable | TimerLoad | TimerCountDown;
+  printf("* Configured Timer1 to generate an IRQ every 1/60th of a second\n");
+  __enable_interrupts();                  // enable interrupts
 }

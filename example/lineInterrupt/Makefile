@@ -31,10 +31,10 @@ obj/%-debug.o: %.c
 	cc65816 $(CFLAGS) --debug --list-file=$(@:%.o=%.lst) -o $@ $<
 
 lineInterrupt.elf: $(OBJS_DEBUG)
-	ln65816 --debug -o $@ $^ $(FOENIX_LINKER_RULES) clib-$(LIB_MODEL).a --list-file=lineInterrupt.lst --cross-reference --rtattr printf=reduced --semi-hosted
+	ln65816 --debug -o $@ $^ $(FOENIX_LINKER_RULES) clib-$(LIB_MODEL).a --list-file=lineInterrupt.lst --cross-reference --rtattr printf=reduced --rtattr cstartup=Foenix --target=Foenix --semi-hosted --stack-size=2000 --heap-size=0
 
 lineInterrupt.pgz:  $(OBJS) $(FOENIX_LIB)
-	ln65816 -o $@ $^ $(FOENIX_LINKER_RULES) clib-$(LIB_MODEL)-Foenix.a --output-format=pgz --list-file=lineInterrupt.lst --cross-reference --rtattr printf=reduced --rtattr cstartup=Foenix
+	ln65816 -o $@ $^ $(FOENIX_LINKER_RULES) clib-$(LIB_MODEL)-Foenix.a --output-format=pgz --list-file=lineInterrupt.lst --cross-reference --rtattr printf=reduced --rtattr cstartup=Foenix --stack-size=2000 --heap-size=0
 
 $(FOENIX_LIB):
 	(cd $(FOENIX) ; make all)
